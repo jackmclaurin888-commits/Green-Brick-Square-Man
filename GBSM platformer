@@ -1,0 +1,129 @@
+import random as r
+import pygame
+import sys
+h=0
+matrix = [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+]
+
+y1=7
+CELL = 77
+GRID_W = len(matrix[0])
+GRID_H = len(matrix)
+pygame.init()
+screen = pygame.display.set_mode((GRID_W * CELL, GRID_H * CELL))
+pygame.display.set_caption("Green Brick Square Man")
+y=0
+u=0
+i=0
+m=0
+l=0
+COLORS={
+    0: (0,0,0),
+    1: (255,0,0),
+    2: (0,255,0),
+    3: (255,0,0)
+}
+clock = pygame.time.Clock()
+
+        
+matrix[y1][7]=2
+def scroll_forward():
+    global y,u,i
+    col = 0
+    for row in matrix:
+        row.pop(col)
+    new_col = [0,0,0,0,0,y,u,i,1]
+
+    for k in range(len(matrix)):
+        matrix[k].append(new_col[k])
+def generation():
+    matrix[y1][7]=0
+    global m,l,y,u,i
+    m+=1
+    m=m%11
+    if m == 0:
+        l = r.randint(1,4)
+
+    y = u = i = 0   # ← THIS LINE FIXES INFINITE WALLS
+
+    if m == 0:
+        if l == 2:
+            i = 3
+        elif l == 3:
+            u = 3
+            i = 3
+        elif l == 4:
+            y = u = i = 3
+    scroll_forward()
+y = u = i = 0
+def find_positions(matrix, value):
+    pos = []
+    for z in range(len(matrix)):
+        for x in range(len(matrix[0])):
+            if matrix[z][x] == value:
+                pos.append((x, z))
+    return pos
+def draw():
+    s=0
+    t=0
+    screen.fill((0, 0, 0))
+    for s in range(GRID_H):
+        for t in range(GRID_W):
+            pygame.draw.rect(
+                screen,
+                COLORS[matrix[s][t]],
+                (t * CELL, s * CELL, CELL, CELL)
+            )
+            pygame.draw.rect(
+                screen,
+                (60, 60, 60),
+                (t * CELL, s * CELL, CELL, CELL),
+                1
+            )
+    pygame.display.flip()
+def touching_4dir(matrix, a, b):
+    A = find_positions(matrix, a)
+    B = set(find_positions(matrix, b))
+
+    for x, y in A:
+        for dx, dy in ((1,0), (-1,0), (0,1), (0,-1)):
+            if (x + dx, y + dy) in B:
+                return "you died"
+    return False
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and y1==7:
+                h=1
+    if touching_4dir(matrix,2,3)=="you died":
+        print("Square Man is down, but your determination isn't!")
+        pygame.quit()
+        sys.exit()
+    if h>0 and not h==4:
+        y1-=2
+        h+=1
+    elif y1<7:
+        h=0
+        y1+=1
+    else:
+        h=0
+    matrix[y1][7]=0
+    m+=1
+    m=m%11
+    generation()
+    matrix[y1][7]=2
+    draw()
+    clock.tick(17)
